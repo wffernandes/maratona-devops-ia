@@ -25,13 +25,23 @@ jobs:
                 file: 02-kube-news/src/Dockerfile
                 push: true
                 tags: |
-                  wffernandes/kube-news-maratona:${{ github.run_number }}
+                  wffernandes/kube-news-maratona:V${{ github.run_number }}
                   wffernandes/kube-news-maratona:latest
     CD:
         needs: [CI]
         runs-on: ubuntu-latest
         
         steps:
-            - run: echo "Obter o código"
-            - run: echo "Configurar o Kubeconfig"
-            - run: echo "Executar o apply"
+            - name: checkout repository
+              uses: actions/checkout@v4
+            
+            - name: Set up Kubeconfig
+              uses: azure/k8s-set-context@v4
+              with:
+                kubeconfig: ${{ secrets.KUBE_CONFIG}}
+
+            - name: Deploy to Kubernetes
+              uses: Azure/k8s-deploy@v5
+              with:
+                manifests: 02-kube-news/k8s/deployment.yaml
+                images: wffernandes/kube-news-maratona:V${{ github.run_number }}
